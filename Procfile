@@ -1,1 +1,2 @@
-web: bokeh serve --port=$PORT --allow-websocket-origin=bokeh-worldmap-demo.herokuapp.com --address=0.0.0.0 --use-xheaders forecastcovid_app.py
+web: bokeh serve --port=$PORT --allow-websocket-origin=forecastcovid.herokuapp.com --address=0.0.0.0 --use-xheaders forecastcovid_app.py
+
