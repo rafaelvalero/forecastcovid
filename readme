@@ -1,2 +1,0 @@
-To run  the app:
-"bokeh serve --show app_arima.py"

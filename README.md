@@ -2,6 +2,9 @@
 Simple app using time series to forecast number of deaths of new
 sick people within the next days.
 
+See example [here](https://forecastcovid.herokuapp.com/forecastcovid_app)
+
+
 ![layout](resources/layout.png)
 
 
