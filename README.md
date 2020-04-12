@@ -2,8 +2,7 @@
 Simple app using time series to forecast number of deaths of new
 sick people within the next days.
 
-![](resoures/layout.png.png)
-
+![layout](resources/layout.png)
 
 
 Enviroment
