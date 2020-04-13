@@ -64,54 +64,76 @@ def download_csv_from_link_to_folder_date(url='https://opendata.ecdc.europa.eu/c
     Download the data from url and place it in file and folder
     """
     today = date.today()
-    dowload_file_name = dowload_folder + '/data_ecdc_{}'.format(today.strftime('%y_%m_%d'))
+    dowload_file_name = dowload_folder + '/data_ecdc_{}.csv'.format(today.strftime('%y_%m_%d'))
     response = requests.get(url, stream=True)
     with open(dowload_file_name, 'wb') as out_file:
         shutil.copyfileobj(response.raw, out_file)
     del response
-    return None
+    return dowload_file_name
 
-def get_data_latest_folder(dowload_folder = '../../data/ecdc', keep_only_latest_file = False):
+
+def get_data_latest_folder(dowload_folder='../../data/ecdc', keep_only_latest_file=False):
     """
     Upload the latest version of the date and if it is not up today check for a newer one.
+
     :param dowload_folder: folder where to place the data
     :param keep_only_latest_file: boolean. Remove all previous data files. To save space
     :return:
+      data: dataframe with the data for all countries
+      file_date: as datetime.date(2020, 4, 13). So it is easy to check if the data need to be refreshed. Only once per
+      day
     """
     try:
+        # to see if is needed to refresh which data is todaay
+        today = date.today()
+        # Let explore our data files to see the latest one
         list_csv_files = []
         for root, dirs, files in os.walk(dowload_folder):
             for file in files:
                 if file.endswith('.csv'):
                     list_csv_files.append(file)
-        latest_file = sorted(list_csv_files)[-1]
+        if list_csv_files != []:
+            # try to get the latest file
+            latest_file = sorted(list_csv_files)[-1]
+            dowload_file_name = dowload_folder + '/'+latest_file
+        else:
+            # Could happen there is not files, so let get one
+            dowload_file_name = download_csv_from_link_to_folder_date(
+                url='https://opendata.ecdc.europa.eu/covid19/casedistribution/csv',
+                dowload_folder=dowload_folder)
+            data = pd.read_csv(dowload_file_name, encoding="ISO-8859-1")
+            file_date = today
+            return data, file_date
+        # If there is files let get the date from the name of the file
         file_date = latest_file.split('.')[0].split('_')[-3:]
-        today = date.today()
+        file_date = datetime.strptime('-'.join(file_date), '%y-%m-%d').date()
         # if today we got the latest version fine if not we get it
-        if datetime.strptime('-'.join(file_date), '%y-%m-%d').date() != today:
-            download_csv_from_link_to_folder_date(url='https://opendata.ecdc.europa.eu/covid19/casedistribution/csv',
-                                                  dowload_folder=dowload_folder)
+        if file_date != today:
+            dowload_file_name = download_csv_from_link_to_folder_date(
+                url='https://opendata.ecdc.europa.eu/covid19/casedistribution/csv',
+                dowload_folder=dowload_folder)
             # After updating remove all previous files
             if keep_only_latest_file:
                 for file in list_csv_files:
-                    os.remove(dowload_folder+'/'+file)
-        data = pd.read_csv(dowload_folder+'/'+latest_file, encoding="ISO-8859-1")
-        return data
+                    os.remove(dowload_folder + '/' + file)
+            # update current date
+            file_date = today
+        data = pd.read_csv(dowload_file_name, encoding="ISO-8859-1")
+        return data, file_date
     except Exception as e:
         print(e)
         print(dowload_folder)
 
-
 if __name__ == '__main__':
 
     import doctest
+    # :TODO implementation of tests
     doctest.testmod(verbose=True)
 
     # download the data if needed
 
-
-
-
-
-
+    dowload_folder = '../../data/ecdc'
+    resources_folder = 'resources'
+#    """ Upload the data"""
+    data, file_date = get_data_latest_folder(dowload_folder=dowload_folder, keep_only_latest_file=True)
 

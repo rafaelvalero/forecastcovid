@@ -11,6 +11,7 @@ from bokeh.plotting import figure, output_file, show
 from bokeh.layouts import column, grid
 import math
 from bokeh.io import curdoc
+from datetime import date, datetime
 sys.path.insert(0,'../covid_forcast')
 sys.path.insert(0,'../../../covid_forcast')
 # where to save things
@@ -20,9 +21,10 @@ from bokeh.io import output_file, show
 from bokeh.models import Dropdown
 # Location of the data
 dowload_folder='data/ecdc'
+keep_only_latest_file = True # True to delete all previous files
 resources_folder = 'resources'
 """ Upload the data"""
-data = get_data_latest_folder(dowload_folder=dowload_folder, keep_only_latest_file = True)
+data, file_date = get_data_latest_folder(dowload_folder=dowload_folder, keep_only_latest_file = keep_only_latest_file)
 """List of countries to explore"""
 variable_list = ['cases', 'deaths']
 """Country"""
@@ -37,7 +39,13 @@ tooltips = [('forecast','@forecast'),
             ('Real Values', '@y')]
 
 
-def make_dataset(country='Spain', variable='cases', lenght_for_forecast=3):
+def make_dataset(country='Spain', variable='cases', lenght_for_forecast=3, file_date = file_date,
+                 dowload_folder=dowload_folder, keep_only_latest_file= keep_only_latest_file, data = data):
+    # Make sure the dataset is updated
+    today = date.today()
+    if file_date != today:
+        data, file_date = get_data_latest_folder(dowload_folder=dowload_folder, keep_only_latest_file=True)
+        data['dateRep'] = pd.to_datetime(data['dateRep'], format='%d/%m/%Y')
     data_ = data[data['countriesAndTerritories'] == country].copy()
     data_ = data_.sort_values(by='dateRep')
     # Triming initial zeros
